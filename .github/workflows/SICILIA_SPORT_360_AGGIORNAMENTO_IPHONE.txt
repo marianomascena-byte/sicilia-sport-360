@@ -1,0 +1,294 @@
+name: Aggiorna Sicilia Sport 360
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "7,37 * * * *"
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: sicilia-sport-360-pages
+  cancel-in-progress: false
+
+jobs:
+  aggiorna-e-pubblica:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Scarica il sito dal repository
+        uses: actions/checkout@v4
+      - name: Prepara Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Leggi RSS e aggiorna homepage
+        shell: bash
+        run: |
+          python - <<'PY'
+          from __future__ import annotations
+
+          import datetime as dt
+          import hashlib
+          import html
+          import json
+          import pathlib
+          import re
+          import urllib.error
+          import urllib.parse
+          import urllib.request
+          import urllib.robotparser
+          import xml.etree.ElementTree as ET
+          from email.utils import parsedate_to_datetime
+
+          ROOT = pathlib.Path('index.html')
+          AGENT = 'SiciliaSport360/1.0 (+https://marianomascena-byte.github.io/sicilia-sport-360/)'
+          # Feed ufficiali elencati dalla stessa testata nella directory RSS pubblica.
+          # Il quarto elemento indica se applicare il filtro rigoroso sportivo.
+          FEEDS = [
+              ('LiveSicilia — Sport', 'https://livesicilia.it/articoli/sport/feed/', 'livesicilia.it', True),
+              ('LiveSicilia — Palermo', 'https://livesicilia.it/articoli/palermo/feed/', 'livesicilia.it', True),
+              ('LiveSicilia — Catania', 'https://livesicilia.it/articoli/catania/feed/', 'livesicilia.it', True),
+              ('LiveSicilia — Agrigento', 'https://livesicilia.it/articoli/agrigento/feed/', 'livesicilia.it', True),
+              ('LiveSicilia — Caltanissetta', 'https://livesicilia.it/articoli/caltanissetta/feed/', 'livesicilia.it', True),
+              ('LiveSicilia — Enna', 'https://livesicilia.it/articoli/enna/feed/', 'livesicilia.it', True),
+              ('LiveSicilia — Messina', 'https://livesicilia.it/articoli/messina/feed/', 'livesicilia.it', True),
+              ('LiveSicilia — Ragusa', 'https://livesicilia.it/articoli/ragusa/feed/', 'livesicilia.it', True),
+              ('LiveSicilia — Siracusa', 'https://livesicilia.it/articoli/siracusa/feed/', 'livesicilia.it', True),
+              ('LiveSicilia — Trapani', 'https://livesicilia.it/articoli/trapani/feed/', 'livesicilia.it', True),
+          ]
+          PROVINCES = {
+              'Agrigento': ('agrigento', 'licata', 'sciacca', 'canicatti', 'favara'),
+              'Caltanissetta': ('caltanissetta', 'gela', 'niscemi', 'mussomeli'),
+              'Catania': ('catania', 'acireale', 'paterno', 'adrano', 'giarre', 'mascalucia'),
+              'Enna': ('enna', 'nicosia', 'piazza armerina', 'leonforte'),
+              'Messina': ('messina', 'orlandina', 'milazzo', 'barcellona', 'taormina'),
+              'Palermo': ('palermo', 'bagheria', 'partinico', 'carini', 'rosanero'),
+              'Ragusa': ('ragusa', 'modica', 'vittoria', 'comiso', 'scicli'),
+              'Siracusa': ('siracusa', 'augusta', 'lentini', 'noto', 'melilli', 'avola'),
+              'Trapani': ('trapani', 'marsala', 'mazara', 'alcamo', 'castelvetrano'),
+          }
+          SPORTS = (
+              ('Calcio a 5', ('futsal', 'calcio a 5')),
+              ('Pallanuoto', ('pallanuoto',)),
+              ('Pallavolo', ('pallavolo', 'volley')),
+              ('Pallacanestro', ('basket', 'pallacanestro')),
+              ('Pallamano', ('pallamano', 'handball')),
+              ('Nuoto', ('nuoto', 'nuotatori')),
+              ('Tennistavolo', ('tennistavolo', 'ping pong')),
+              ('Tennis', ('tennis', 'atp ', 'wta ')),
+              ('Padel', ('padel',)),
+              ('Rugby', ('rugby',)),
+              ('Motori', ('rally', 'formula 1', 'automobilismo', 'motociclismo')),
+              ('Atletica', ('atletica', 'maratona', 'mezza maratona')),
+              ('Ciclismo', ('ciclismo', 'ciclisti')),
+              ('Vela', ('vela', 'regata')),
+              ('Canottaggio', ('canottaggio',)),
+              ('Scherma', ('scherma',)),
+              ('Arti marziali', ('judo', 'karate', 'taekwondo')),
+              ('Ginnastica', ('ginnastica',)),
+              ('Calcio', ('serie c', 'serie b', 'serie d', 'calcio', 'serie a', 'rossazzurri', 'rosanero', 'gol', 'derby')),
+          )
+
+          def clean(value):
+              no_tags = re.sub(r'<[^>]+>', '', str(value or ''))
+              return re.sub(r'\s+', ' ', html.unescape(no_tags)).strip()[:190]
+
+          def safe_url(url, allowed):
+              parts = urllib.parse.urlsplit(str(url).strip())
+              return (parts.scheme == 'https' and parts.hostname in (allowed, 'www.' + allowed)
+                      and not parts.username and not parts.password and parts.port is None)
+
+          def allowed_by_robots(url):
+              parts = urllib.parse.urlsplit(url)
+              robots = f'{parts.scheme}://{parts.netloc}/robots.txt'
+              try:
+                  req = urllib.request.Request(robots, headers={'User-Agent': AGENT})
+                  with urllib.request.urlopen(req, timeout=12) as response:
+                      data = response.read(150_000).decode('utf-8', errors='replace')
+              except urllib.error.HTTPError as exc:
+                  if exc.code in (404, 410):
+                      return True
+                  raise RuntimeError(f'robots.txt non verificabile: HTTP {exc.code}') from exc
+              parser = urllib.robotparser.RobotFileParser()
+              parser.parse(data.splitlines())
+              return parser.can_fetch(AGENT, url)
+
+          def load_feed(url, allowed):
+              if not safe_url(url, allowed):
+                  raise ValueError('Endpoint RSS non conforme')
+              if not allowed_by_robots(url):
+                  raise PermissionError('robots.txt vieta la lettura del feed')
+              request = urllib.request.Request(url, headers={
+                  'User-Agent': AGENT,
+                  'Accept': 'application/rss+xml, application/atom+xml, application/xml'
+              })
+              with urllib.request.urlopen(request, timeout=20) as response:
+                  if not safe_url(response.url, allowed):
+                      raise ValueError('Redirect a dominio non approvato')
+                  body = response.read(800_001)
+              if len(body) > 800_000:
+                  raise ValueError('Feed troppo grande')
+              if re.search(br'<!\s*(?:DOCTYPE|ENTITY)\b', body, re.I):
+                  raise ValueError('XML non sicuro')
+              return ET.fromstring(body)
+
+          def entries(root):
+              items = []
+              for node in root.findall('./channel/item')[:75]:
+                  items.append((node.findtext('title', ''), node.findtext('link', ''), node.findtext('pubDate', '')))
+              ns = '{http://www.w3.org/2005/Atom}'
+              for node in root.findall(f'{ns}entry')[:75]:
+                  links = node.findall(f'{ns}link')
+                  link = next((l.get('href', '') for l in links if l.get('rel', 'alternate') == 'alternate'), '')
+                  items.append((node.findtext(f'{ns}title', ''), link,
+                                node.findtext(f'{ns}published', '') or node.findtext(f'{ns}updated', '')))
+              return items
+
+          def published(raw):
+              try:
+                  try:
+                      d = parsedate_to_datetime(raw)
+                  except (TypeError, ValueError, IndexError):
+                      d = dt.datetime.fromisoformat(raw.replace('Z', '+00:00'))
+                  if d.tzinfo is None:
+                      d = d.replace(tzinfo=dt.timezone.utc)
+                  now = dt.datetime.now(dt.timezone.utc)
+                  if d > now + dt.timedelta(minutes=10) or d < now - dt.timedelta(days=14):
+                      return None
+                  return d.isoformat()
+              except (TypeError, ValueError, AttributeError):
+                  return None
+
+          def sicilian_relevance(title):
+              lower = title.casefold()
+              regional = ('sicili', 'rossazzurr', 'rosaner', 'etnei', 'etnea', 'orlandina',
+                          'teLiMar'.casefold(), 'passalacqua ragusa', 'fortitudo agrigento',
+                          'città di acireale', 'cus catania')
+              return any(term in lower for terms in PROVINCES.values() for term in terms) or any(term in lower for term in regional)
+
+          SPORT_ONLY_TERMS = (
+              'sport', 'calcio', 'futsal', 'pallavolo', 'volley', 'basket', 'pallacanestro',
+              'pallamano', 'pallanuoto', 'nuoto', 'tennis', 'padel', 'rugby', 'atletica',
+              'maratona', 'ciclismo', 'scherma', 'judo', 'karate', 'canottaggio', 'ginnastica',
+              'rally', 'motociclismo', 'serie b', 'serie c', 'serie d', 'serie a2',
+              'serie a1', 'eccellenza', 'promozione', 'playoff', 'play-out', 'playout',
+              'derby', 'match', 'stadio', 'palazzetto', 'campionato', 'torneo',
+              'allenatore', 'atleti', 'atleta', 'gol', 'rossazzurr', 'rosaner',
+              'catania fc', 'palermo fc', 'messina fc', 'trapani calcio', 'coppa italia',
+          )
+
+          def is_sports_news(title):
+              lower = title.casefold()
+              return any(token in lower for token in SPORT_ONLY_TERMS)
+
+          def classification(title):
+              lower = title.casefold()
+              sport = next((name for name, terms in SPORTS if any(term in lower for term in terms)), 'Altri sport')
+              province = next((name for name, terms in PROVINCES.items() if any(term in lower for term in terms)), 'Sicilia')
+              kind = 'Femminile' if 'femminil' in lower or 'women' in lower else 'Notizie'
+              return sport, province, kind
+
+          source = ROOT.read_text(encoding='utf-8')
+          pattern = re.compile(r'^window\.__SS360_DATA__=(\{.*\});$', flags=re.M)
+          match = pattern.search(source)
+          if not match:
+              raise SystemExit('Il formato di index.html non è quello previsto: pubblicazione interrotta per sicurezza')
+          base = json.loads(match.group(1))
+          articles = {item['url']: item for item in base['articles'] if item.get('is_seed') and item.get('url', '').startswith('https://')}
+          now = dt.datetime.now(dt.timezone.utc)
+          # La pubblicazione Pages è un artefatto: recuperiamo la versione precedente
+          # per non perdere le notizie quando escono dai feed dopo qualche ora.
+          try:
+              public_site = 'https://marianomascena-byte.github.io/sicilia-sport-360/'
+              with urllib.request.urlopen(urllib.request.Request(public_site, headers={'User-Agent': AGENT}), timeout=12) as response:
+                  existing_html = response.read(700_001).decode('utf-8')
+              if len(existing_html) < 700_000:
+                  saved = re.search(r'^window\.__SS360_DATA__=\{ok:true,json:async\(\)=>\((\{.*\})\)\};$', existing_html, flags=re.M)
+                  if saved:
+                      previous = json.loads(saved.group(1))
+                      preserved = 0
+                      for item in previous.get('articles', []):
+                          if not isinstance(item, dict) or item.get('is_seed') or not isinstance(item.get('url'), str):
+                              continue
+                          link, stamp = item['url'], item.get('published_at', '')
+                          if (not link.startswith('https://') or link in articles or not isinstance(stamp, str)
+                                  or published(stamp) is None):
+                              continue
+                          # Solo dati già pubblici e campi limitati.
+                          item['title'] = clean(item.get('title'))
+                          if not item['title']:
+                              continue
+                          articles[link] = item
+                          preserved += 1
+                      print(f'Archivio recuperato dal sito pubblico: {preserved} notizie recenti conservate')
+          except (OSError, ValueError, json.JSONDecodeError) as exc:
+              print(f'AVVISO: archivio precedente non leggibile; continuo dai feed: {type(exc).__name__}')
+
+          success = 0
+          for label, feed_url, host, require_sport in FEEDS:
+              try:
+                  feed = load_feed(feed_url, host)
+                  incoming = entries(feed)
+                  if not incoming:
+                      raise ValueError('Feed senza notizie RSS/Atom')
+                  count = 0
+                  for title, link, date in incoming:
+                      title, link = clean(title), link.strip()
+                      pub = published(date)
+                      if (not title or not pub or not safe_url(link, host)
+                              or link in articles or not sicilian_relevance(title)
+                              or (require_sport and not is_sports_news(title))):
+                          continue
+                      sport, province, kind = classification(title)
+                      articles[link] = {
+                          'id': hashlib.sha256(link.encode()).hexdigest()[:14],
+                          'title': title, 'url': link, 'source': label,
+                          'published_at': pub, 'sport': sport, 'province': province,
+                          'team': '', 'kind': kind, 'is_seed': False,
+                      }
+                      count += 1
+                  success += 1
+                  print(f'{label}: {count} nuove notizie sportive; {len(incoming)} elementi RSS letti')
+              except (OSError, RuntimeError, ValueError, PermissionError, ET.ParseError) as exc:
+                  print(f'AVVISO: {label} non aggiornabile: {type(exc).__name__}: {exc}')
+
+          listed = sorted(articles.values(), key=lambda x: x.get('published_at', ''), reverse=True)[:100]
+          result = {
+              'generated_at': now.isoformat(),
+              'feed_update_status': 'active' if success else 'temporaneamente_non_disponibile',
+              'sources_enabled': success,
+              'articles': listed,
+          }
+          # Non consentire che un titolo RSS chiuda lo script HTML o introduca markup arbitrario.
+          json_payload = json.dumps(result, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c').replace('>', '\\u003e').replace('&', '\\u0026')
+          # La prima versione del sito si aspetta un oggetto simile a Response (ok + json()).
+          replacement = 'window.__SS360_DATA__={ok:true,json:async()=>(' + json_payload + ')};'
+          # Conservare come base JSON leggibile per i controlli successivi (solo durante il build in workspace).
+          # Non occorre un database: a ogni esecuzione le notizie recenti sono rilette dal feed ufficiale.
+          source = source[:match.start()] + replacement + source[match.end():]
+          ROOT.write_text(source, encoding='utf-8')
+          print(f'Pagina rigenerata: {len(listed)} collegamenti, {success}/{len(FEEDS)} feed RSS letti con successo')
+          PY
+      - name: Prepara il sito statico
+        run: |
+          mkdir -p _site
+          cp index.html _site/index.html
+          touch _site/.nojekyll
+      - name: Configura GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Carica i file della pubblicazione
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '_site'
+      - name: Pubblica su GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
