@@ -1,1 +1,26 @@
-https://github.com/marianomascena-byte/sicilia-sport-360/new/main/.github/workflows?utm_source=chatgpt.com
+name: Verifica feed Sicilia Sport 360
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verifica-rss:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Controlla feed RSS
+        run: |
+          python - <<'PY'
+          import urllib.request
+          import xml.etree.ElementTree as ET
+          nomi = ['sport','palermo','catania','agrigento','caltanissetta','enna','messina','ragusa','siracusa','trapani']
+          for nome in nomi:
+              url = 'https://livesicilia.it/articoli/' + nome + '/feed/'
+              try:
+                  richiesta = urllib.request.Request(url, headers={'User-Agent':'Mozilla/5.0'})
+                  with urllib.request.urlopen(richiesta, timeout=12) as risposta:
+                      dati = risposta.read(400000)
+                  articoli = ET.fromstring(dati).findall('.//item')
+                  print(nome, 'OK:', len(articoli), 'articoli')
+              except Exception as errore:
+                  print(nome, 'NON DISPONIBILE:', errore)
+          PY
