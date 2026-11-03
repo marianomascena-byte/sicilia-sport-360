@@ -1,0 +1,79 @@
+name: Esplora fonti Sicilia Sport 360
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  esplora-rss:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Verifica RSS Sport Web Sicilia e Sporticily
+        shell: bash
+        run: |
+          python - <<'PY'
+          import urllib.request
+          import urllib.error
+          import urllib.parse
+          import urllib.robotparser
+          import xml.etree.ElementTree as ET
+
+          fonti = [
+              ('Sport Web Sicilia', 'https://sportwebsicilia.it/feed/'),
+              ('Sporticily', 'https://www.sporticily.it/feed/'),
+          ]
+          user_agent = 'SiciliaSport360-FeedCheck/1.0 (test RSS senza ripubblicazione)'
+          valide = 0
+          for nome, url in fonti:
+              print('\n---', nome, '---', flush=True)
+              try:
+                  parsed = urllib.parse.urlsplit(url)
+                  robots_url = parsed.scheme + '://' + parsed.netloc + '/robots.txt'
+                  robots_req = urllib.request.Request(robots_url, headers={'User-Agent': user_agent})
+                  try:
+                      with urllib.request.urlopen(robots_req, timeout=12) as robots_resp:
+                          robots_data = robots_resp.read(100000).decode('utf-8', 'replace')
+                      robots = urllib.robotparser.RobotFileParser()
+                      robots.parse(robots_data.splitlines())
+                      if not robots.can_fetch(user_agent, url):
+                          print('NON VERIFICABILE: robots.txt non consente la richiesta RSS')
+                          continue
+                  except urllib.error.HTTPError as err:
+                      if err.code != 404:
+                          print('NON VERIFICABILE: robots.txt risponde HTTP', err.code)
+                          continue
+                  except (OSError, ValueError) as err:
+                      print('NON VERIFICABILE: impossibile controllare robots.txt:', str(err)[:120])
+                      continue
+                  req = urllib.request.Request(url, headers={
+                      'User-Agent': user_agent,
+                      'Accept': 'application/rss+xml, application/atom+xml, application/xml, text/xml',
+                  })
+                  with urllib.request.urlopen(req, timeout=15) as resp:
+                      final = urllib.parse.urlsplit(resp.geturl())
+                      if final.hostname not in (parsed.hostname, parsed.hostname.removeprefix('www.'), 'www.' + parsed.hostname.removeprefix('www.')):
+                          print('NON VERIFICABILE: reindirizzamento a dominio diverso')
+                          continue
+                      payload = resp.read(500000)
+                  root = ET.fromstring(payload)
+                  items = root.findall('./channel/item')
+                  if not items:
+                      ns = '{http://www.w3.org/2005/Atom}'
+                      items = root.findall(f'{ns}entry')
+                  if not items:
+                      print('NON VERIFICABILE: nessuna voce RSS/Atom; controllare il formato')
+                      continue
+                  valide += 1
+                  print('RSS/ATOM DISPONIBILE:', len(items), 'voci lette; indirizzo:', url)
+                  for item in items[:3]:
+                      title = item.findtext('title') or item.findtext('{http://www.w3.org/2005/Atom}title') or ''
+                      print('Titolo campione:', ' '.join(title.split())[:140])
+              except (urllib.error.URLError, OSError, ValueError, ET.ParseError) as err:
+                  print('NON VERIFICABILE:', type(err).__name__, str(err)[:150])
+          print('\nRISULTATO:', valide, '/2 feed XML verificati')
+          print('NOTA LEGALE: nessuna pubblicazione autorizzata da questo test')
+          print('HOMEPAGE: nessun file modificato; nessun deploy effettuato')
+          PY
