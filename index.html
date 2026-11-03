@@ -41,6 +41,85 @@
  });
 })();
 </script>
+ <!-- SS360: notizie automatiche separate dalla homepage -->
+<script>
+(() => {
+  'use strict';
+  const target = document.getElementById('ultime');
+  if (!target || document.getElementById('ss360-auto')) return;
+  const section = document.createElement('section');
+  section.id = 'ss360-auto';
+  section.className = 'container';
+  section.style.margin = '30px auto';
+  const title = document.createElement('h2');
+  title.textContent = 'Ultime segnalazioni automatiche';
+  const note = document.createElement('p');
+  note.textContent = 'Collegamenti alle fonti originali. La selezione editoriale resta disponibile qui sotto.';
+  const status = document.createElement('p');
+  status.setAttribute('role', 'status');
+  status.textContent = 'Verifica degli aggiornamenti in corso…';
+  const grid = document.createElement('div');
+  grid.className = 'news-grid';
+  section.append(title, note, status, grid);
+  target.parentNode.insertBefore(section, target);
+
+  function key(link) {
+    try {
+      const u = new URL(link);
+      if (u.protocol !== 'https:') return null;
+      return u.hostname.replace(/^www\./, '') + u.pathname.replace(/\/+$/, '');
+    } catch (e) { return null; }
+  }
+  const seen = new Set(Array.from(document.querySelectorAll('#news-grid a[href]'))
+    .map(a => key(a.href)).filter(Boolean));
+  const url = 'https://raw.githubusercontent.com/marianomascena-byte/sicilia-sport-360/main/notizie.json';
+
+  fetch(url, {cache: 'no-store'})
+    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(data => {
+      if (!Array.isArray(data.articles)) throw new Error('Archivio non valido');
+      const fresh = [];
+      for (const item of data.articles) {
+        if (!item || !item.url) continue;
+        const k = key(item.url);
+        if (!k || seen.has(k)) continue;
+        seen.add(k);
+        fresh.push(item);
+        if (fresh.length === 12) break;
+      }
+      status.textContent = fresh.length
+        ? fresh.length + ' collegamenti automatici · Fonti raggiunte: ' + (data.sources_ok || 0)
+        : 'Nessuna nuova segnalazione rispetto alle notizie già visibili.';
+
+      fresh.forEach(item => {
+        const card = document.createElement('article');
+        card.className = 'news-card';
+        const body = document.createElement('div');
+        body.className = 'card-body';
+        const category = document.createElement('p');
+        category.textContent = [item.sport, item.province].filter(Boolean).join(' · ');
+        const heading = document.createElement('h3');
+        const link = document.createElement('a');
+        link.href = item.url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = item.label || item.title || 'Apri la notizia originale';
+        heading.append(link);
+        const source = document.createElement('p');
+        source.textContent = 'Fonte: ' + (item.source || 'Testata originale');
+        const date = document.createElement('small');
+        const when = new Date(item.published_at);
+        date.textContent = Number.isNaN(when.getTime()) ? '' : when.toLocaleDateString('it-IT');
+        body.append(category, heading, source, date);
+        card.append(body);
+        grid.append(card);
+      });
+    })
+    .catch(() => {
+      status.textContent = 'Archivio temporaneamente non raggiungibile. Le notizie della homepage restano disponibili.';
+    });
+})();
+</script>
  <body>
  <div class="stripe"></div>
  <header class="masthead">
