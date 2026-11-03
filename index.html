@@ -13,7 +13,35 @@
 </style>
  
 </head>
-<body>
+<section id="ss360-google" style="max-width:1180px;margin:28px auto;padding:22px;background:#102039;color:white;border-top:4px solid #e8ac56;border-radius:4px">
+<h2 style="color:white;margin:0 0 8px;font-size:26px">Cerca in tutto lo sport siciliano</h2>
+<p style="color:#dce4eb;margin:0 0 18px">Risultati su Google, con link alle testate originali.</p>
+<form id="ss360-gform" action="https://www.google.com/search" target="_blank" method="get" style="display:flex;flex-wrap:wrap;gap:10px;align-items:end">
+<label style="flex:2 1 170px">Parola chiave<input id="ss360-word" type="search" placeholder="Squadra o atleta" style="width:100%;padding:12px"></label>
+<label style="flex:1 1 140px">Provincia<select id="ss360-prov" style="width:100%;padding:12px"><option value="">Tutta la Sicilia</option><option>Agrigento</option><option>Caltanissetta</option><option>Catania</option><option>Enna</option><option>Messina</option><option>Palermo</option><option>Ragusa</option><option>Siracusa</option><option>Trapani</option></select></label>
+<label style="flex:1 1 140px">Disciplina<select id="ss360-sport" style="width:100%;padding:12px"><option value="">Tutti gli sport</option><option>Calcio</option><option>Calcio a 5</option><option>Basket</option><option>Volley</option><option>Nuoto</option><option>Tennis</option><option>Rugby</option><option>Pallanuoto</option><option>Atletica</option><option>Sport femminile</option><option>Sport giovanile</option></select></label>
+<label style="flex:1 1 100px">Periodo<select id="ss360-period" style="width:100%;padding:12px"><option value="">Sempre</option><option value="1">24 ore</option><option value="7" selected>7 giorni</option><option value="30">30 giorni</option></select></label>
+<label style="flex:1 1 120px">Motore<select id="ss360-engine" style="width:100%;padding:12px"><option value="web">Google Web</option><option value="news">Google Notizie</option></select></label>
+<input name="q" id="ss360-q" type="hidden"><input name="tbm" value="nws" id="ss360-tbm" type="hidden" disabled>
+<button type="submit" style="background:#e8ac56;color:#102039;padding:13px 18px;font-weight:bold;border:0;cursor:pointer">CERCA SU GOOGLE ↗</button>
+</form></section>
+<script>
+(function(){
+ var box=document.getElementById('ss360-google'),news=document.getElementById('ultime');
+ if(box&&news)news.parentNode.insertBefore(box,news);
+ document.getElementById('ss360-gform').addEventListener('submit',function(){
+ var word=document.getElementById('ss360-word').value.trim();
+ var province=document.getElementById('ss360-prov').value;
+ var sport=document.getElementById('ss360-sport').value;
+ var days=document.getElementById('ss360-period').value;
+ var query=[word,sport,province||'Sicilia'].filter(Boolean);
+ if(days){var d=new Date();d.setDate(d.getDate()-Number(days));query.push('after:'+d.toISOString().slice(0,10));}
+ document.getElementById('ss360-q').value=query.join(' ');
+ document.getElementById('ss360-tbm').disabled=document.getElementById('ss360-engine').value!=='news';
+ });
+})();
+</script>
+ <body>
  <div class="stripe"></div>
  <header class="masthead">
   <div class="container masthead-inner">
