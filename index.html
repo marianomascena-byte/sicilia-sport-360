@@ -218,5 +218,118 @@ if(window.__SS360_DATA__ && Array.isArray(window.__SS360_DATA__.articles)){
 })();
 
 </script>
-</body>
+
+<!-- SICILIA SPORT 360 - NOTIZIE AUTOMATICHE -->
+
+<section id="ss360-auto" class="container" style="margin:30px auto;padding:20px 15px">
+  <h2>Ultime segnalazioni automatiche</h2>
+  <p id="ss360-auto-status">Caricamento delle notizie in corso...</p>
+  <div id="ss360-auto-grid" class="news-grid"></div>
+</section>
+
+<script>
+(async function () {
+  const section = document.getElementById('ss360-auto');
+  const original = document.getElementById('ultime');
+
+  if (original && section) {
+    original.before(section);
+  }
+
+  const status = document.getElementById('ss360-auto-status');
+  const grid = document.getElementById('ss360-auto-grid');
+
+  const url =
+    'https://raw.githubusercontent.com/marianomascena-byte/sicilia-sport-360/main/notizie.json';
+
+  try {
+    const response = await fetch(url, { cache: 'no-store' });
+
+    if (!response.ok) {
+      throw new Error('Archivio non raggiungibile');
+    }
+
+    const data = await response.json();
+
+    if (!Array.isArray(data.articles)) {
+      throw new Error('Formato archivio non valido');
+    }
+
+    const normalize = value => {
+      try {
+        const u = new URL(value);
+        if (u.protocol !== 'https:') return null;
+        return u.hostname.replace(/^www\./, '') +
+          u.pathname.replace(/\/+$/, '');
+      } catch {
+        return null;
+      }
+    };
+
+    const existing = new Set(
+      Array.from(document.querySelectorAll('#news-grid a[href]'))
+        .map(a => normalize(a.href))
+        .filter(Boolean)
+    );
+
+    let count = 0;
+
+    for (const article of data.articles) {
+      if (!article || !article.url) continue;
+
+      const id = normalize(article.url);
+      if (!id || existing.has(id)) continue;
+
+      existing.add(id);
+
+      const card = document.createElement('article');
+      card.className = 'news-card';
+
+      const body = document.createElement('div');
+      body.className = 'card-body';
+
+      const category = document.createElement('p');
+      category.textContent = [
+        article.sport,
+        article.province
+      ].filter(Boolean).join(' · ');
+
+      const heading = document.createElement('h3');
+      const link = document.createElement('a');
+
+      link.href = article.url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent =
+        article.label || article.title || 'Leggi la notizia';
+
+      heading.appendChild(link);
+
+      const source = document.createElement('p');
+      source.textContent =
+        'Fonte: ' + (article.source || 'Testata originale');
+
+      body.append(category, heading, source);
+      card.appendChild(body);
+      grid.appendChild(card);
+
+      count++;
+      if (count >= 12) break;
+    }
+
+    status.textContent = count
+      ? count + ' segnalazioni automatiche disponibili'
+      : 'Nessuna nuova segnalazione rispetto alle notizie già pubblicate.';
+
+  } catch (error) {
+    status.textContent =
+      'Archivio temporaneamente non disponibile. Le altre notizie restano visibili.';
+    console.error('SS360:', error);
+  }
+})();
+</script>
+
+<!-- FINE NOTIZIE AUTOMATICHE -->
+
+ </body>
 </html>
