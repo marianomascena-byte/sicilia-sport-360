@@ -229,15 +229,17 @@ if(window.__SS360_DATA__ && Array.isArray(window.__SS360_DATA__.articles)){
 
 <script>
 (async function () {
-  const section = document.getElementById('ss360-auto');
-  const original = document.getElementById('ultime');
+  
+const section = document.querySelector('#ss360-auto');
+const original = document.querySelector('#ultime');
 
-  if (original && section) {
-    original.before(section);
-  }
+if (original && section) {
+  original.before(section);
+}
 
-  const status = document.getElementById('ss360-auto-status');
-  const grid = document.getElementById('ss360-auto-grid');
+const status = document.querySelector('#ss360-auto-status');
+const grid = document.querySelector('#ss360-auto-grid');
+
 
   const url =
     'https://raw.githubusercontent.com/marianomascena-byte/sicilia-sport-360/main/notizie.json';
