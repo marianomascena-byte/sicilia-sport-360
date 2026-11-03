@@ -1,7 +1,16 @@
 {
-  "generated_at": "2026-11-03T14:05:40.792992+00:00",
+  "generated_at": "2026-11-03T16:11:34.431211+00:00",
   "sources_ok": 1,
   "articles": [
+    {
+      "id": "2eaad07778adde",
+      "label": "Calcio · Sicilia — notizia su LiveSicilia Sport",
+      "url": "https://livesicilia.it/tragedia-nel-calcio-muore-dopo-un-violento-scontro/",
+      "source": "LiveSicilia Sport",
+      "published_at": "2026-11-03T11:24:50+00:00",
+      "sport": "Calcio",
+      "province": "Sicilia"
+    },
     {
       "id": "f8a2ce84e1a9a8",
       "label": "Calcio · Catania — notizia su LiveSicilia Sport",
