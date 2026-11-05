@@ -1,138 +1,100 @@
-name: SS360 - Aggiorna notizie JSON
-
+name: SS360 - Notizie recenti
 on:
   workflow_dispatch:
   schedule:
-    - cron: '17 */3 * * *'
-
+    - cron: '7,22,37,52 * * * *'
 permissions:
   contents: write
-
 concurrency:
   group: ss360-news-json
   cancel-in-progress: false
-
 jobs:
   aggiorna-json:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - name: Leggi feed e aggiorna solo notizie.json
+      - name: Cerca notizie e crea archivio aggiornato
         run: |
           python - <<'PY'
-          import datetime as dt
-          import email.utils
-          import hashlib
-          import json
-          import pathlib
-          import re
-          import urllib.parse
-          import urllib.request
-          import urllib.robotparser
-          import xml.etree.ElementTree as ET
-
-          FEEDS = [
-              ('Sporticily', 'https://www.sporticily.it/feed/', 'sporticily.it'),
-              ('LiveSicilia Sport', 'https://livesicilia.it/articoli/sport/feed/', 'livesicilia.it'),
-          ]
-          UA = 'SiciliaSport360/1.0 (RSS link discovery)'
-          sports = [
-              ('Pallacanestro', 'basket|pallacanestro|orlandina'),
-              ('Pallavolo', 'volley|pallavolo'),
-              ('Calcio a 5', 'futsal|calcio a 5'),
-              ('Pallanuoto', 'pallanuoto'),
-              ('Nuoto', 'nuoto|nuotatori'),
-              ('Tennis', 'tennis|padel'),
-              ('Rugby', 'rugby'),
-              ('Motori', 'rally|motociclismo|formula 1'),
-              ('Atletica', 'atletica|maratona'),
-              ('Calcio', 'calcio|palermo|catania|siracusa|messina|trapani|derby|rossazzurr|rosaner|serie b|serie c|serie d'),
-          ]
-          provinces = 'Agrigento Caltanissetta Catania Enna Messina Palermo Ragusa Siracusa Trapani'.split()
-          now = dt.datetime.now(dt.timezone.utc)
-          cutoff = now - dt.timedelta(days=15)
-          path = pathlib.Path('notizie.json')
-          try:
-              previous = json.loads(path.read_text(encoding='utf-8'))
-          except (OSError, ValueError):
-              previous = {}
-          records = {a['url']: a for a in previous.get('articles', []) if isinstance(a, dict) and a.get('url', '').startswith('https://')}
-          sources_ok = 0
-
-          for source, feed, domain in FEEDS:
+          import datetime as dt, email.utils, hashlib, html, json, pathlib, re, time, urllib.parse, urllib.request, xml.etree.ElementTree as ET, urllib.robotparser
+          now=dt.datetime.now(dt.timezone.utc)
+          path=pathlib.Path('notizie.json')
+          old=json.loads(path.read_text()) if path.exists() else {}
+          records={}
+          sports={'Calcio a 5':['futsal','calcio a 5'],'Pallavolo':['volley','pallavolo'],'Pallacanestro':['basket','pallacanestro'],'Pallanuoto':['pallanuoto'],'Nuoto':['nuoto'],'Tennis':['tennis','padel'],'Rugby':['rugby'],'Atletica':['atletica','maratona'],'Motori':['rally','motociclismo'],'Calcio':['calcio','serie c','rossazzurr','rosaner','derby']}
+          provinces='Catania Palermo Messina Trapani Siracusa Ragusa Agrigento Enna Caltanissetta'.split()
+          def add(title,url,source,when,hint='Altri sport',place='Sicilia'):
               try:
-                  host = urllib.parse.urlsplit(feed).netloc
-                  rp = urllib.robotparser.RobotFileParser()
-                  rp.set_url('https://' + host + '/robots.txt')
+                  u=urllib.parse.urlsplit(url)
+                  if u.scheme!='https' or not u.hostname:return False
+                  when=when.replace(tzinfo=dt.timezone.utc) if when.tzinfo is None else when.astimezone(dt.timezone.utc)
+                  if when<now-dt.timedelta(days=4) or when>now+dt.timedelta(hours=1):return False
+                  title=html.unescape(title).strip()
+                  if not title:return False
+                  key=u.hostname.removeprefix('www.').lower()+u.path.rstrip('/').lower()
+                  if key in records:return False
+                  lower=title.casefold()
+                  sport=next((s for s,ws in sports.items() if any(w in lower for w in ws)),hint)
+                  if sport=='Altri sport':return False
+                  province=next((p for p in provinces if p.casefold() in lower),place)
+                  records[key]={'id':hashlib.sha256(key.encode()).hexdigest()[:14],'title':title[:180],'label':title[:180],'url':url,'source':source,'published_at':when.isoformat(),'sport':sport,'province':province}
+                  return True
+              except (ValueError,AttributeError):return False
+          for a in old.get('articles',[]):
+              try:add(a.get('title') or a.get('label',''),a['url'],a['source'],dt.datetime.fromisoformat(a['published_at']),a.get('sport','Altri sport'),a.get('province','Sicilia'))
+              except (KeyError,ValueError,TypeError):pass
+          ok=0
+          for source,feed,domain in [('LiveSicilia Sport','https://livesicilia.it/articoli/sport/feed/','livesicilia.it'),('Sporticily','https://www.sporticily.it/feed/','sporticily.it')]:
+              try:
+                  rp=urllib.robotparser.RobotFileParser()
+                  rp.set_url('https://'+urllib.parse.urlsplit(feed).netloc+'/robots.txt')
                   rp.read()
-                  if not rp.can_fetch(UA, feed):
-                      print(source, 'non verificabile: robots.txt', flush=True)
-                      continue
-                  request = urllib.request.Request(feed, headers={'User-Agent': UA, 'Accept': 'application/rss+xml, application/xml, text/xml'})
-                  with urllib.request.urlopen(request, timeout=15) as response:
-                      xml = response.read(500000)
-                  items = ET.fromstring(xml).findall('./channel/item')
-                  if not items:
-                      print(source, 'nessun elemento RSS', flush=True)
-                      continue
-                  sources_ok += 1
-                  added = 0
-                  for item in items[:40]:
-                      title = ' '.join((item.findtext('title') or '').split())
-                      url = (item.findtext('link') or '').strip()
-                      parsed = urllib.parse.urlsplit(url)
-                      if not title or parsed.scheme != 'https' or not (parsed.hostname == domain or parsed.hostname == 'www.' + domain):
-                          continue
-                      try:
-                          when = email.utils.parsedate_to_datetime(item.findtext('pubDate', ''))
-                          when = when.replace(tzinfo=dt.timezone.utc) if when.tzinfo is None else when.astimezone(dt.timezone.utc)
-                      except (ValueError, TypeError):
-                          continue
-                      if not cutoff <= when <= now + dt.timedelta(hours=2):
-                          continue
-                      low = title.casefold()
-                      sport = next((kind for kind, words in sports if any(w in low for w in words.split('|'))), 'Altri sport')
-                      province = next((p for p in provinces if p.casefold() in low), 'Sicilia')
-                      if source == 'LiveSicilia Sport' and sport == 'Altri sport':
-                          continue
-                      if url not in records:
-                          records[url] = {
-                              'id': hashlib.sha256(url.encode()).hexdigest()[:14],
-                              'label': f'{sport} · {province} — notizia su {source}',
-                              'url': url,
-                              'source': source,
-                              'published_at': when.isoformat(),
-                              'sport': sport,
-                              'province': province,
-                          }
-                          added += 1
-                  print(source, ':', len(items), 'elementi RSS,', added, 'nuovi link', flush=True)
-              except (OSError, ValueError, ET.ParseError) as exc:
-                  print(source, 'non disponibile:', type(exc).__name__, str(exc)[:120], flush=True)
-
-          if sources_ok == 0:
-              raise SystemExit('Nessun feed disponibile: archivio lasciato invariato')
-          recent = [a for a in records.values() if a.get('published_at', '') >= cutoff.isoformat()]
-          recent.sort(key=lambda a: a['published_at'], reverse=True)
-          recent = recent[:90]
-          if recent == previous.get('articles', []):
-              print('Nessuna nuova notizia: nessun file modificato')
-          else:
-              output = {'generated_at': now.isoformat(), 'sources_ok': sources_ok, 'articles': recent}
-              path.write_text(json.dumps(output, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-              print('Archivio aggiornato:', len(recent), 'collegamenti,', sources_ok, 'fonti raggiunte')
+                  if not rp.can_fetch('SiciliaSport360/1.0',feed):
+                      print(source,'bloccato da robots.txt');continue
+                  req=urllib.request.Request(feed,headers={'User-Agent':'SiciliaSport360/1.0'})
+                  with urllib.request.urlopen(req,timeout=15) as r:items=ET.fromstring(r.read(500000)).findall('./channel/item')
+                  if not items:continue
+                  ok+=1
+                  for item in items:
+                      title=item.findtext('title') or '';url=item.findtext('link') or ''
+                      if urllib.parse.urlsplit(url).hostname not in (domain,'www.'+domain):continue
+                      if source=='LiveSicilia Sport' and not any(w in title.casefold() for w in ['catania','palermo','messina','trapani','siracusa','ragusa','gela','sicilia','acireale','agrigento','enna','caltanissetta','orlandina']):continue
+                      try:date=email.utils.parsedate_to_datetime(item.findtext('pubDate') or '')
+                      except (TypeError,ValueError):continue
+                      add(title,url,source,date,'Calcio' if source=='LiveSicilia Sport' else 'Altri sport')
+                  print(source,':',len(items),'elementi RSS')
+              except (OSError,ValueError,ET.ParseError) as e:print(source,'non disponibile:',str(e)[:100])
+          searches=[('"Catania" "calcio"','Calcio','Catania'),('"Palermo" "calcio"','Calcio','Palermo'),('"Messina" "calcio"','Calcio','Messina'),('"Sicilia" "pallavolo"','Pallavolo','Sicilia'),('"Sicilia" "basket"','Pallacanestro','Sicilia'),('"Sicilia" "sport"','Altri sport','Sicilia')]
+          gdelt_ok=0
+          for query,sport,province in searches:
+              params=urllib.parse.urlencode({'query':query,'mode':'artlist','format':'json','timespan':'2d','maxrecords':75,'sort':'datedesc'})
+              try:
+                  req=urllib.request.Request('https://api.gdeltproject.org/api/v2/doc/doc?'+params,headers={'User-Agent':'SiciliaSport360/1.0'})
+                  with urllib.request.urlopen(req,timeout=22) as r:data=json.loads(r.read(1200000))
+                  news=data.get('articles',[]);gdelt_ok+=1
+                  for item in news:
+                      try:when=dt.datetime.strptime(re.sub(r'\D','',item['seendate'])[:14],'%Y%m%d%H%M%S').replace(tzinfo=dt.timezone.utc)
+                      except (KeyError,ValueError):continue
+                      url=item.get('url','');domain=urllib.parse.urlsplit(url).hostname or ''
+                      add(item.get('title',''),url,domain.removeprefix('www.'),when,sport,province)
+                  print('Ricerca',query,':',len(news),'risultati')
+              except (OSError,ValueError,TypeError) as e:print('Ricerca',query,'non disponibile:',str(e)[:100])
+              time.sleep(5)
+          if not (ok or gdelt_ok):raise SystemExit('Fonti non disponibili: archivio invariato')
+          articles=sorted(records.values(),key=lambda a:a['published_at'],reverse=True)[:150]
+          fresh=bool(articles and dt.datetime.fromisoformat(articles[0]['published_at'])>now-dt.timedelta(hours=24))
+          output={'generated_at':now.isoformat(),'sources_ok':ok+int(gdelt_ok>0),'rss_ok':ok,'searches_ok':gdelt_ok,'status':'active' if fresh else 'stale','articles':articles}
+          path.write_text(json.dumps(output,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          print('RISULTATO:',len(articles),'notizie,',ok,'RSS e',gdelt_ok,'ricerche funzionanti; notizie ultime 24h:',fresh)
           PY
       - name: Salva solo notizie.json
         run: |
-          if [ -f notizie.json ]; then
-            git add notizie.json
-            if ! git diff --cached --quiet; then
-              git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'Aggiorna archivio notizie sport siciliano'
-              git push
-            else
-              echo 'Archivio invariato: nessun commit'
-            fi
+          git add notizie.json
+          if git diff --cached --quiet; then
+            echo 'Nessuna modifica ai dati'
           else
-            echo 'Nessun archivio generato'
+            git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'SS360: aggiorna notizie'
+            git pull --rebase origin main
+            git push origin HEAD:main
           fi
