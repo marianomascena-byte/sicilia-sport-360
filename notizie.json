@@ -1,24 +1,19 @@
 {
-  "generated_at": "2026-11-03T16:11:34.431211+00:00",
+  "generated_at": "2026-11-05T12:51:03.569734+00:00",
   "sources_ok": 1,
+  "rss_ok": 1,
+  "searches_ok": 0,
+  "status": "stale",
   "articles": [
     {
-      "id": "2eaad07778adde",
+      "id": "84f4284a02e9ef",
+      "title": "Calcio · Sicilia — notizia su LiveSicilia Sport",
       "label": "Calcio · Sicilia — notizia su LiveSicilia Sport",
       "url": "https://livesicilia.it/tragedia-nel-calcio-muore-dopo-un-violento-scontro/",
       "source": "LiveSicilia Sport",
       "published_at": "2026-11-03T11:24:50+00:00",
       "sport": "Calcio",
       "province": "Sicilia"
-    },
-    {
-      "id": "f8a2ce84e1a9a8",
-      "label": "Calcio · Catania — notizia su LiveSicilia Sport",
-      "url": "https://livesicilia.it/catania-fc-ko-a-cerignola-e-la-quinta-sconfitta-in-campionato/",
-      "source": "LiveSicilia Sport",
-      "published_at": "2026-11-01T07:32:26+00:00",
-      "sport": "Calcio",
-      "province": "Catania"
     }
   ]
 }
