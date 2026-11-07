@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-11-07T10:59:25.164765+00:00",
-  "sources_ok": 2,
+  "generated_at": "2026-11-07T11:37:42.769942+00:00",
+  "sources_ok": 1,
   "rss_ok": 1,
-  "searches_ok": 1,
+  "searches_ok": 0,
   "status": "stale",
   "articles": [
     {
@@ -14,16 +14,6 @@
       "published_at": "2026-11-05T14:21:44+00:00",
       "sport": "Calcio",
       "province": "Palermo"
-    },
-    {
-      "id": "84f4284a02e9ef",
-      "title": "Calcio · Sicilia — notizia su LiveSicilia Sport",
-      "label": "Calcio · Sicilia — notizia su LiveSicilia Sport",
-      "url": "https://livesicilia.it/tragedia-nel-calcio-muore-dopo-un-violento-scontro/",
-      "source": "LiveSicilia Sport",
-      "published_at": "2026-11-03T11:24:50+00:00",
-      "sport": "Calcio",
-      "province": "Sicilia"
     }
   ]
 }
