@@ -1,10 +1,20 @@
 {
-  "generated_at": "2026-11-08T19:05:38.340513+00:00",
+  "generated_at": "2026-11-08T19:46:39.775661+00:00",
   "sources_ok": 2,
   "rss_ok": 1,
-  "searches_ok": 1,
+  "searches_ok": 2,
   "status": "active",
   "articles": [
+    {
+      "id": "892492d8ed23bd",
+      "title": "Catania-Sorrento 2-0, Bruzzaniti e Cicerelli regalano la vittoria al Massimino",
+      "label": "Catania-Sorrento 2-0, Bruzzaniti e Cicerelli regalano la vittoria al Massimino",
+      "url": "https://livesicilia.it/catania-sorrento-2-0-bruzzaniti-cicerelli/",
+      "source": "LiveSicilia Sport",
+      "published_at": "2026-11-08T19:41:01+00:00",
+      "sport": "Calcio",
+      "province": "Catania"
+    },
     {
       "id": "6b8d770bbd01e1",
       "title": "Longo carica la squadra: “Dobbiamo dimostrare di essere il Catania”",
