@@ -1,10 +1,20 @@
 {
-  "generated_at": "2026-11-08T08:32:47.154894+00:00",
-  "sources_ok": 1,
+  "generated_at": "2026-11-08T09:23:01.442923+00:00",
+  "sources_ok": 2,
   "rss_ok": 1,
-  "searches_ok": 0,
-  "status": "stale",
+  "searches_ok": 2,
+  "status": "active",
   "articles": [
+    {
+      "id": "6b8d770bbd01e1",
+      "title": "Longo carica la squadra: “Dobbiamo dimostrare di essere il Catania”",
+      "label": "Longo carica la squadra: “Dobbiamo dimostrare di essere il Catania”",
+      "url": "https://livesicilia.it/catania-sorrento-longo-convocati/",
+      "source": "LiveSicilia Sport",
+      "published_at": "2026-11-08T09:17:20+00:00",
+      "sport": "Calcio",
+      "province": "Catania"
+    },
     {
       "id": "62f17ae5309ed3",
       "title": "Palermo ad Ascoli per la continuità, D’Angelo: fiducia in Pohjanpalo",
