@@ -1,10 +1,20 @@
 {
-  "generated_at": "2026-11-10T14:36:51.033028+00:00",
-  "sources_ok": 2,
+  "generated_at": "2026-11-10T15:23:08.424833+00:00",
+  "sources_ok": 1,
   "rss_ok": 1,
-  "searches_ok": 1,
-  "status": "stale",
+  "searches_ok": 0,
+  "status": "active",
   "articles": [
+    {
+      "id": "ec015087edbb37",
+      "title": "Maratona di Palermo, corrono in 3.300 da 67 nazioni: numeri record",
+      "label": "Maratona di Palermo, corrono in 3.300 da 67 nazioni: numeri record",
+      "url": "https://livesicilia.it/maratona-di-palermo-corrono-in-3-300-da-67-nazioni-numeri-record/",
+      "source": "LiveSicilia Sport",
+      "published_at": "2026-11-10T15:20:28+00:00",
+      "sport": "Atletica",
+      "province": "Palermo"
+    },
     {
       "id": "892492d8ed23bd",
       "title": "Catania-Sorrento 2-0, Bruzzaniti e Cicerelli regalano la vittoria al Massimino",
