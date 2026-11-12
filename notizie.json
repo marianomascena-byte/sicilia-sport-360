@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-11-12T19:30:12.892217+00:00",
-  "sources_ok": 2,
+  "generated_at": "2026-11-12T20:24:13.382083+00:00",
+  "sources_ok": 1,
   "rss_ok": 1,
-  "searches_ok": 2,
+  "searches_ok": 0,
   "status": "stale",
   "articles": [
     {
@@ -14,16 +14,6 @@
       "published_at": "2026-11-10T15:20:28+00:00",
       "sport": "Atletica",
       "province": "Palermo"
-    },
-    {
-      "id": "892492d8ed23bd",
-      "title": "Catania-Sorrento 2-0, Bruzzaniti e Cicerelli regalano la vittoria al Massimino",
-      "label": "Catania-Sorrento 2-0, Bruzzaniti e Cicerelli regalano la vittoria al Massimino",
-      "url": "https://livesicilia.it/catania-sorrento-2-0-bruzzaniti-cicerelli/",
-      "source": "LiveSicilia Sport",
-      "published_at": "2026-11-08T19:41:01+00:00",
-      "sport": "Calcio",
-      "province": "Catania"
     }
   ]
 }
