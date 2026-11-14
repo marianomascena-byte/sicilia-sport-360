@@ -1,19 +1,8 @@
 {
-  "generated_at": "2026-11-14T14:59:07.404215+00:00",
-  "sources_ok": 1,
+  "generated_at": "2026-11-14T15:38:11.260225+00:00",
+  "sources_ok": 2,
   "rss_ok": 1,
-  "searches_ok": 0,
+  "searches_ok": 2,
   "status": "stale",
-  "articles": [
-    {
-      "id": "ec015087edbb37",
-      "title": "Maratona di Palermo, corrono in 3.300 da 67 nazioni: numeri record",
-      "label": "Maratona di Palermo, corrono in 3.300 da 67 nazioni: numeri record",
-      "url": "https://livesicilia.it/maratona-di-palermo-corrono-in-3-300-da-67-nazioni-numeri-record/",
-      "source": "LiveSicilia Sport",
-      "published_at": "2026-11-10T15:20:28+00:00",
-      "sport": "Atletica",
-      "province": "Palermo"
-    }
-  ]
+  "articles": []
 }
