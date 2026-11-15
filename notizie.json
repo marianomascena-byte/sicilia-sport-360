@@ -1,8 +1,19 @@
 {
-  "generated_at": "2026-11-15T20:12:14.843080+00:00",
-  "sources_ok": 2,
+  "generated_at": "2026-11-15T20:56:48.713319+00:00",
+  "sources_ok": 1,
   "rss_ok": 1,
-  "searches_ok": 2,
-  "status": "stale",
-  "articles": []
+  "searches_ok": 0,
+  "status": "active",
+  "articles": [
+    {
+      "id": "1abb2be5b2bdd8",
+      "title": "Catania Fc, cade ancora: la Salernitana passa di misura all’Arechi",
+      "label": "Catania Fc, cade ancora: la Salernitana passa di misura all’Arechi",
+      "url": "https://livesicilia.it/salernitana-catania-sesta-sconfitta-rossoazzurri/",
+      "source": "LiveSicilia Sport",
+      "published_at": "2026-11-15T20:28:15+00:00",
+      "sport": "Calcio",
+      "province": "Catania"
+    }
+  ]
 }
