@@ -1,8 +1,19 @@
 {
-  "generated_at": "2026-11-20T12:30:42.065005+00:00",
+  "generated_at": "2026-11-20T13:48:36.201956+00:00",
   "sources_ok": 2,
   "rss_ok": 1,
-  "searches_ok": 1,
-  "status": "stale",
-  "articles": []
+  "searches_ok": 2,
+  "status": "active",
+  "articles": [
+    {
+      "id": "fc787a60918ca8",
+      "title": "Palermo, Inzaghi: “Catanzaro insidioso, servirà una grande partita”",
+      "label": "Palermo, Inzaghi: “Catanzaro insidioso, servirà una grande partita”",
+      "url": "https://livesicilia.it/palermo-inzaghi-catanzaro-insidioso-indisponibili/",
+      "source": "LiveSicilia Sport",
+      "published_at": "2026-11-20T13:44:31+00:00",
+      "sport": "Calcio",
+      "province": "Palermo"
+    }
+  ]
 }
