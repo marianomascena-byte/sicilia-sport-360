@@ -1,10 +1,20 @@
 {
-  "generated_at": "2026-11-22T16:49:45.310076+00:00",
-  "sources_ok": 1,
+  "generated_at": "2026-11-22T17:29:02.599862+00:00",
+  "sources_ok": 2,
   "rss_ok": 1,
-  "searches_ok": 0,
+  "searches_ok": 1,
   "status": "active",
   "articles": [
+    {
+      "id": "ff46b6d5844d42",
+      "title": "Catania Fc, un pari che non serve a nessuno: con il Bari è solo 0-0",
+      "label": "Catania Fc, un pari che non serve a nessuno: con il Bari è solo 0-0",
+      "url": "https://livesicilia.it/catania-bari-0-0-rossazzurri-deludenti/",
+      "source": "LiveSicilia Sport",
+      "published_at": "2026-11-22T17:19:06+00:00",
+      "sport": "Calcio",
+      "province": "Catania"
+    },
     {
       "id": "a4aa3ec224d15d",
       "title": "Catania Fc, contro il Bari è prova del nove per Longo",
