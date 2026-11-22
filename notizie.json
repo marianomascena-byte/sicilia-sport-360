@@ -1,10 +1,20 @@
 {
-  "generated_at": "2026-11-22T10:08:23.854229+00:00",
-  "sources_ok": 1,
+  "generated_at": "2026-11-22T11:03:15.354091+00:00",
+  "sources_ok": 2,
   "rss_ok": 1,
-  "searches_ok": 0,
-  "status": "stale",
+  "searches_ok": 1,
+  "status": "active",
   "articles": [
+    {
+      "id": "a4aa3ec224d15d",
+      "title": "Catania Fc, contro il Bari è prova del nove per Longo",
+      "label": "Catania Fc, contro il Bari è prova del nove per Longo",
+      "url": "https://livesicilia.it/catania-bari-longo-prova-del-nove-convocati/",
+      "source": "LiveSicilia Sport",
+      "published_at": "2026-11-22T10:10:22+00:00",
+      "sport": "Calcio",
+      "province": "Catania"
+    },
     {
       "id": "fc787a60918ca8",
       "title": "Palermo, Inzaghi: “Catanzaro insidioso, servirà una grande partita”",
