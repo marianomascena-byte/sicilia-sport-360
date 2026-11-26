@@ -1,19 +1,8 @@
 {
-  "generated_at": "2026-11-26T16:40:16.803812+00:00",
-  "sources_ok": 2,
+  "generated_at": "2026-11-26T17:40:25.791635+00:00",
+  "sources_ok": 1,
   "rss_ok": 1,
-  "searches_ok": 2,
+  "searches_ok": 0,
   "status": "stale",
-  "articles": [
-    {
-      "id": "ff46b6d5844d42",
-      "title": "Catania Fc, un pari che non serve a nessuno: con il Bari è solo 0-0",
-      "label": "Catania Fc, un pari che non serve a nessuno: con il Bari è solo 0-0",
-      "url": "https://livesicilia.it/catania-bari-0-0-rossazzurri-deludenti/",
-      "source": "LiveSicilia Sport",
-      "published_at": "2026-11-22T17:19:06+00:00",
-      "sport": "Calcio",
-      "province": "Catania"
-    }
-  ]
+  "articles": []
 }
