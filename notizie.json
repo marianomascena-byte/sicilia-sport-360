@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-11-26T09:52:20.834244+00:00",
+  "generated_at": "2026-11-26T10:58:51.271535+00:00",
   "sources_ok": 2,
   "rss_ok": 1,
-  "searches_ok": 1,
+  "searches_ok": 4,
   "status": "stale",
   "articles": [
     {
@@ -12,16 +12,6 @@
       "url": "https://livesicilia.it/catania-bari-0-0-rossazzurri-deludenti/",
       "source": "LiveSicilia Sport",
       "published_at": "2026-11-22T17:19:06+00:00",
-      "sport": "Calcio",
-      "province": "Catania"
-    },
-    {
-      "id": "a4aa3ec224d15d",
-      "title": "Catania Fc, contro il Bari è prova del nove per Longo",
-      "label": "Catania Fc, contro il Bari è prova del nove per Longo",
-      "url": "https://livesicilia.it/catania-bari-longo-prova-del-nove-convocati/",
-      "source": "LiveSicilia Sport",
-      "published_at": "2026-11-22T10:10:22+00:00",
       "sport": "Calcio",
       "province": "Catania"
     }
