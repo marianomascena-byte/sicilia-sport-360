@@ -1,8 +1,19 @@
 {
-  "generated_at": "2026-11-27T07:59:11.063193+00:00",
+  "generated_at": "2026-11-27T09:05:27.630267+00:00",
   "sources_ok": 2,
   "rss_ok": 1,
   "searches_ok": 1,
-  "status": "stale",
-  "articles": []
+  "status": "active",
+  "articles": [
+    {
+      "id": "00fb952c35b7ce",
+      "title": "Ct Palermo, ultimo atto dei playout: salvezza vicina per gli uomini",
+      "label": "Ct Palermo, ultimo atto dei playout: salvezza vicina per gli uomini",
+      "url": "https://livesicilia.it/tennis-ct-palermo-playout-serie-a1-ritorno/",
+      "source": "LiveSicilia Sport",
+      "published_at": "2026-11-27T08:41:15+00:00",
+      "sport": "Calcio",
+      "province": "Palermo"
+    }
+  ]
 }
